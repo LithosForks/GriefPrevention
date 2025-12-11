@@ -124,19 +124,22 @@ public class EntityDamageHandler implements Listener
         //monsters are never protected
         if (isHostile(event.damaged())) return;
 
+        // boolean notHostilePet = event.damaged().getCustomName() == null || event.damaged().getCustomName().contains("|");
+        // if (isHostile(event.damaged()) && notHostilePet) return;
+
         //horse protections can be disabled
         if (event.damaged() instanceof Horse && !instance.config_claims_protectHorses) return;
         if (event.damaged() instanceof Donkey && !instance.config_claims_protectDonkeys) return;
         if (event.damaged() instanceof Mule && !instance.config_claims_protectDonkeys) return;
         if (event.damaged() instanceof Llama && !instance.config_claims_protectLlamas) return;
         //protected death loot can't be destroyed, only picked up or despawned due to expiration
-        if (event.damaged().getType() == EntityType.ITEM)
-        {
-            if (event.damaged().hasMetadata("GP_ITEMOWNER"))
-            {
-                event.setCancelled(true);
-            }
-        }
+//        if (event.damaged().getType() == EntityType.ITEM)
+//        {
+//            if (event.damaged().hasMetadata("GP_ITEMOWNER"))
+//            {
+//                event.setCancelled(true);
+//            }
+//        }
 
         // Handle environmental damage to tamed animals that could easily be caused maliciously.
         if (handlePetDamageByEnvironment(event)) return;
@@ -394,7 +397,7 @@ public class EntityDamageHandler implements Listener
         Consumer<Messages> cancelHandler = message ->
         {
             event.setCancelled(true);
-            if (sendMessages) GriefPrevention.sendMessage(attacker, TextMode.Err, message);
+            if (sendMessages) GriefPrevention.sendMessage(attacker, TextMode.Err, message, true);
         };
         // Return whether PVP is handled by a claim at the attacker or defender's locations.
         return handlePvpInClaim(attacker, defender, attacker.getLocation(), attackerData, () -> cancelHandler.accept(Messages.CantFightWhileImmune))
@@ -466,7 +469,7 @@ public class EntityDamageHandler implements Listener
         {
             event.setCancelled(true);
             if (sendMessages)
-                GriefPrevention.sendMessage(attacker, TextMode.Err, Messages.CantFightWhileImmune);
+                GriefPrevention.sendMessage(attacker, TextMode.Err, Messages.CantFightWhileImmune, true);
             return true;
         }
 
@@ -500,9 +503,7 @@ public class EntityDamageHandler implements Listener
             {
                 String ownerName = GriefPrevention.lookupPlayerName(owner);
                 String message = dataStore.getMessage(Messages.NoDamageClaimedEntity, ownerName);
-                if (attacker.hasPermission("griefprevention.ignoreclaims"))
-                    message += "  " + dataStore.getMessage(Messages.IgnoreClaimsAdvertisement);
-                GriefPrevention.sendMessage(attacker, TextMode.Err, message);
+                GriefPrevention.sendMessage(attacker, TextMode.Err, message, true);
             }
         }
         return true;
@@ -609,7 +610,7 @@ public class EntityDamageHandler implements Listener
         if (failureReason == null) return false;
 
         event.setCancelled(true);
-        if (sendMessages) GriefPrevention.sendMessage(attacker, TextMode.Err, failureReason.get());
+        if (sendMessages) GriefPrevention.sendMessage(attacker, TextMode.Err, failureReason.get(), true);
         return true;
     }
 
@@ -690,8 +691,6 @@ public class EntityDamageHandler implements Listener
             override = () ->
             {
                 String message = dataStore.getMessage(Messages.NoDamageClaimedEntity, claim.getOwnerName());
-                if (finalAttacker.hasPermission("griefprevention.ignoreclaims"))
-                    message += "  " + dataStore.getMessage(Messages.IgnoreClaimsAdvertisement);
                 return message;
             };
         }
@@ -707,7 +706,7 @@ public class EntityDamageHandler implements Listener
         // Prevent projectiles from bouncing infinitely.
         preventInfiniteBounce(arrow, event.damaged());
 
-        if (sendMessages) GriefPrevention.sendMessage(attacker, TextMode.Err, noContainersReason.get());
+        if (sendMessages) GriefPrevention.sendMessage(attacker, TextMode.Err, noContainersReason.get(), true);
 
         return true;
     }
@@ -759,9 +758,7 @@ public class EntityDamageHandler implements Listener
         {
             String ownerName = GriefPrevention.lookupPlayerName(owner);
             String message = dataStore.getMessage(Messages.NoDamageClaimedEntity, ownerName);
-            if (attacker.hasPermission("griefprevention.ignoreclaims"))
-                message += "  " + dataStore.getMessage(Messages.IgnoreClaimsAdvertisement);
-            GriefPrevention.sendMessage(attacker, TextMode.Err, message);
+            GriefPrevention.sendMessage(attacker, TextMode.Err, message, true);
         }
         return true;
     }
@@ -896,8 +893,6 @@ public class EntityDamageHandler implements Listener
         Supplier<String> override = () ->
         {
             String message = dataStore.getMessage(Messages.NoDamageClaimedEntity, claim.getOwnerName());
-            if (finalAttacker.hasPermission("griefprevention.ignoreclaims"))
-                message += "  " + dataStore.getMessage(Messages.IgnoreClaimsAdvertisement);
             return message;
         };
         Supplier<String> noContainersReason = claim.checkPermission(attacker, ClaimPermission.Inventory, event, override);
@@ -905,7 +900,7 @@ public class EntityDamageHandler implements Listener
         {
             event.setCancelled(true);
             preventInfiniteBounce(arrow, event.getVehicle());
-            GriefPrevention.sendMessage(attacker, TextMode.Err, noContainersReason.get());
+            GriefPrevention.sendMessage(attacker, TextMode.Err, noContainersReason.get(), true);
         }
 
         //cache claim for later
@@ -968,7 +963,7 @@ public class EntityDamageHandler implements Listener
                                     event.setIntensity(affected, 0);
                                     if (messagedPlayer.compareAndSet(false, true))
                                     {
-                                        GriefPrevention.sendMessage(thrower, TextMode.Err, noContainersReason.get());
+                                        GriefPrevention.sendMessage(thrower, TextMode.Err, noContainersReason.get(), true);
                                     }
                                 }
                             }
@@ -1000,7 +995,7 @@ public class EntityDamageHandler implements Listener
                     {
                         event.setIntensity(affected, 0);
                         if (messagedPlayer.compareAndSet(false, true))
-                            GriefPrevention.sendMessage(thrower, TextMode.Err, message);
+                            GriefPrevention.sendMessage(thrower, TextMode.Err, message, true);
                     };
                     if (handlePvpInClaim(thrower, affectedPlayer, thrower.getLocation(), playerData, () -> cancelHandler.accept(Messages.CantFightWhileImmune)))
                     {
