@@ -21,6 +21,7 @@ package me.ryanhamshire.GriefPrevention;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.griefprevention.commands.ClaimCommand;
+import com.griefprevention.folialib.FoliaScheduler;
 import com.griefprevention.metrics.MetricsHandler;
 import com.griefprevention.protection.InteractionProtectionHandler;
 import com.griefprevention.protection.ProtectionHelper;
@@ -271,6 +272,12 @@ public class GriefPrevention extends JavaPlugin
         AddLogEntry(entry, CustomLogEntryTypes.Debug);
     }
 
+    private FoliaScheduler foliaScheduler;
+
+    public FoliaScheduler getFoliaScheduler() {
+        return foliaScheduler;
+    }
+
     //initializes well...   everything
     public void onEnable()
     {
@@ -279,6 +286,7 @@ public class GriefPrevention extends JavaPlugin
 
         this.loadConfig();
 
+        this.foliaScheduler = new FoliaScheduler(this);
         this.customLogger = new CustomLogger();
 
         AddLogEntry("Finished loading configuration.");
@@ -346,12 +354,12 @@ public class GriefPrevention extends JavaPlugin
         if (this.config_claims_blocksAccruedPerHour_default > 0)
         {
             DeliverClaimBlocksTask task = new DeliverClaimBlocksTask(null, this);
-            this.getServer().getScheduler().scheduleSyncRepeatingTask(this, task, 20L * 60 * 10, 20L * 60 * 10);
+            getFoliaScheduler().runGlobalRepeatingTask(20L * 60 * 10, 20L * 60 * 10, task);
         }
 
         //start recurring cleanup scan for unused claims belonging to inactive players
         FindUnusedClaimsTask task2 = new FindUnusedClaimsTask();
-        this.getServer().getScheduler().scheduleSyncRepeatingTask(this, task2, 20L * 60, 20L * config_advanced_claim_expiration_check_rate);
+        getFoliaScheduler().runGlobalRepeatingTask(20L * 60, 20L * config_advanced_claim_expiration_check_rate, task2);
 
         //register for events
         PluginManager pluginManager = this.getServer().getPluginManager();
@@ -360,7 +368,7 @@ public class GriefPrevention extends JavaPlugin
         playerEventHandler = new PlayerEventHandler(this.dataStore, this);
         pluginManager.registerEvents(playerEventHandler, this);
         // Load monitored commands on a 1-tick delay to allow plugins to enable and Bukkit to load commands.yml.
-        getServer().getScheduler().runTaskLater(this, playerEventHandler::reload, 1L);
+        getFoliaScheduler().runGlobalTaskLater(1L, playerEventHandler::reload);
 
         //block events
         BlockEventHandler blockEventHandler = new BlockEventHandler(this.dataStore);
@@ -2113,7 +2121,7 @@ public class GriefPrevention extends JavaPlugin
 
             //create a task to rescue this player in a little while
             PlayerRescueTask task = new PlayerRescueTask(player, player.getLocation(), event.getDestination());
-            this.getServer().getScheduler().scheduleSyncDelayedTask(this, task, 200L);  //20L ~ 1 second
+            getFoliaScheduler().runTaskLater(player, 200L, task);  //20L ~ 1 second
 
             return true;
         }
@@ -2763,7 +2771,7 @@ public class GriefPrevention extends JavaPlugin
 
             //start a task to re-check this player's inventory every minute until his immunity is gone
             PvPImmunityValidationTask task = new PvPImmunityValidationTask(player);
-            this.getServer().getScheduler().scheduleSyncDelayedTask(this, task, 1200L);
+            getFoliaScheduler().runTaskLater(player, 1200L, task);
         }
     }
 
@@ -2812,7 +2820,7 @@ public class GriefPrevention extends JavaPlugin
                 GuaranteeChunkLoaded(candidateLocation);
                 Block highestBlock = candidateLocation.getWorld().getHighestBlockAt(candidateLocation.getBlockX(), candidateLocation.getBlockZ());
                 Location destination = new Location(highestBlock.getWorld(), highestBlock.getX(), highestBlock.getY() + 2, highestBlock.getZ());
-                player.teleport(destination);
+                player.teleportAsync(destination);
                 return destination;
             }
         }
@@ -2888,11 +2896,11 @@ public class GriefPrevention extends JavaPlugin
         //Only schedule if there should be a delay. Otherwise, send the message right now, else the message will appear out of order.
         if (delayInTicks > 0)
         {
-            GriefPrevention.instance.getServer().getScheduler().runTaskLater(GriefPrevention.instance, task, delayInTicks);
+            GriefPrevention.instance.getFoliaScheduler().runTaskLater(player, delayInTicks, task);
         }
         else
         {
-            task.run();
+            GriefPrevention.instance.getFoliaScheduler().runTask(player, task);
         }
     }
 
@@ -3152,7 +3160,7 @@ public class GriefPrevention extends JavaPlugin
 		//Temporarily store the old location, in case the player wishes to undo the rescue
 		dataStore.getPlayerData(player.getUniqueId()).portalTrappedLocation = oldLocation;
 
-		player.teleport(rescueLocation);
+		player.teleportAsync(rescueLocation);
 		sendMessage(player, TextMode.Info, Messages.RescuedFromPortalTrap);
 		portalReturnMap.remove(player.getUniqueId());
 

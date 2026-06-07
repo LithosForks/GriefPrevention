@@ -389,7 +389,7 @@ class PlayerEventHandler implements Listener
 
                 //kick and ban
                 PlayerKickBanTask task = new PlayerKickBanTask(player, instance.config_spam_banMessage, "GriefPrevention Anti-Spam", true);
-                instance.getServer().getScheduler().scheduleSyncDelayedTask(instance, task, 1L);
+                instance.getFoliaScheduler().runTaskLater(player, 1L, task);
             }
             else
             {
@@ -398,7 +398,7 @@ class PlayerEventHandler implements Listener
 
                 //just kick
                 PlayerKickBanTask task = new PlayerKickBanTask(player, "", "GriefPrevention Anti-Spam", false);
-                instance.getServer().getScheduler().scheduleSyncDelayedTask(instance, task, 1L);
+                instance.getFoliaScheduler().runTaskLater(player, 1L, task);
             }
         }
         else if (result.shouldWarnChatter)
@@ -710,7 +710,7 @@ class PlayerEventHandler implements Listener
 
                         //ban player
                         PlayerKickBanTask task = new PlayerKickBanTask(player, "", "GriefPrevention Smart Ban - Shared Login:" + info.bannedAccountName, true);
-                        instance.getServer().getScheduler().scheduleSyncDelayedTask(instance, task, 10L);
+                        instance.getFoliaScheduler().runTaskLater(player, 10L, task);
 
                         //silence join message
                         event.setJoinMessage("");
@@ -750,7 +750,7 @@ class PlayerEventHandler implements Listener
                 {
                     //kick player
                     PlayerKickBanTask task = new PlayerKickBanTask(player, instance.dataStore.getMessage(Messages.TooMuchIpOverlap), "GriefPrevention IP-sharing limit.", false);
-                    instance.getServer().getScheduler().scheduleSyncDelayedTask(instance, task, 100L);
+                    instance.getFoliaScheduler().runTaskLater(player, 100L, task);
 
                     //silence join message
                     event.setJoinMessage(null);
@@ -775,7 +775,7 @@ class PlayerEventHandler implements Listener
                     if (player.getPortalCooldown() > 8 && player.hasMetadata("GP_PORTALRESCUE"))
                     {
                         GriefPrevention.AddLogEntry("Rescued " + player.getName() + " from a nether portal.\nTeleported from " + GriefPrevention.getfriendlyLocationString(player.getLocation()) + " to " + GriefPrevention.getfriendlyLocationString((Location) player.getMetadata("GP_PORTALRESCUE").get(0).value()), CustomLogEntryTypes.Debug);
-                        player.teleport((Location) player.getMetadata("GP_PORTALRESCUE").get(0).value());
+                        player.teleportAsync((Location) player.getMetadata("GP_PORTALRESCUE").get(0).value());
                         player.removeMetadata("GP_PORTALRESCUE", instance);
                     }
                 }
@@ -789,17 +789,7 @@ class PlayerEventHandler implements Listener
         //if we're holding a logout message for this player, don't send that or this event's join message
         if (instance.config_spam_logoutMessageDelaySeconds > 0)
         {
-            String joinMessage = event.getJoinMessage();
-            if (joinMessage != null && !joinMessage.isEmpty())
-            {
-                Integer taskID = this.heldLogoutMessages.get(player.getUniqueId());
-                if (taskID != null && Bukkit.getScheduler().isQueued(taskID))
-                {
-                    Bukkit.getScheduler().cancelTask(taskID);
-                    player.sendMessage(event.getJoinMessage());
-                    event.setJoinMessage("");
-                }
-            }
+            // removed by lithos
         }
     }
 
@@ -919,14 +909,7 @@ class PlayerEventHandler implements Listener
         //send quit message later, but only if the player stays offline
         if (instance.config_spam_logoutMessageDelaySeconds > 0)
         {
-            String quitMessage = event.getQuitMessage();
-            if (quitMessage != null && !quitMessage.isEmpty())
-            {
-                BroadcastMessageTask task = new BroadcastMessageTask(quitMessage);
-                int taskID = Bukkit.getScheduler().scheduleSyncDelayedTask(instance, task, 20L * instance.config_spam_logoutMessageDelaySeconds);
-                this.heldLogoutMessages.put(playerID, taskID);
-                event.setQuitMessage("");
-            }
+            // removed by lithos
         }
     }
 
@@ -1013,7 +996,7 @@ class PlayerEventHandler implements Listener
         if(!instance.config_claims_enderPearlsRequireAccessTrust) return;
 
         TeleportCause cause = event.getCause();
-        if(cause != TeleportCause.CHORUS_FRUIT && cause != TeleportCause.ENDER_PEARL) return;
+        if(cause != TeleportCause.CONSUMABLE_EFFECT && cause != TeleportCause.ENDER_PEARL) return;
 
         Player player = event.getPlayer();
         PlayerData playerData = this.dataStore.getPlayerData(player.getUniqueId());
@@ -1305,7 +1288,7 @@ class PlayerEventHandler implements Listener
             if (instance.claimsEnabledForWorld(player.getWorld()))
             {
                 EquipShovelProcessingTask task = new EquipShovelProcessingTask(player);
-                instance.getServer().getScheduler().scheduleSyncDelayedTask(instance, task, 15L);  //15L is approx. 3/4 of a second
+                instance.getFoliaScheduler().runTaskLater(player, 15L, task);  //15L is approx. 3/4 of a second
             }
         }
     }

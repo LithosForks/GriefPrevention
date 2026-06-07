@@ -70,9 +70,9 @@ public class AutoExtendClaimTask implements Runnable
             }
         }
 
-        Bukkit.getScheduler().runTaskAsynchronously(
-                GriefPrevention.instance,
-                new AutoExtendClaimTask(claim, snapshots, world.getEnvironment(), lowestLootableTile));
+        GriefPrevention.instance.getFoliaScheduler().runAsync(
+                new AutoExtendClaimTask(claim, snapshots, world.getEnvironment(), lowestLootableTile)
+        );
     }
 
     private final Claim claim;
@@ -108,7 +108,7 @@ public class AutoExtendClaimTask implements Runnable
         int newY = this.getLowestBuiltY();
         if (newY < this.claim.getLesserBoundaryCorner().getBlockY())
         {
-            Bukkit.getScheduler().runTask(GriefPrevention.instance, new ExecuteExtendClaimTask(claim, newY));
+            GriefPrevention.instance.getFoliaScheduler().runGlobalTask(new ExecuteExtendClaimTask(claim, newY));
         }
     }
 
@@ -345,7 +345,7 @@ public class AutoExtendClaimTask implements Runnable
             playerBlocks.add(Material.NETHER_BRICK);
             playerBlocks.add(Material.MAGMA_BLOCK);
             playerBlocks.add(Material.ANCIENT_DEBRIS);
-            playerBlocks.add(Material.CHAIN);
+            playerBlocks.add(Material.IRON_CHAIN);
             playerBlocks.add(Material.SHROOMLIGHT);
             playerBlocks.add(Material.NETHER_GOLD_ORE);
             playerBlocks.add(Material.NETHER_SPROUTS);

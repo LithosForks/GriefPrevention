@@ -53,11 +53,11 @@ class CustomLogger
         int daysToKeepLogs = GriefPrevention.instance.config_logs_daysToKeep;
         if (daysToKeepLogs > 0)
         {
-            BukkitScheduler scheduler = GriefPrevention.instance.getServer().getScheduler();
+            var scheduler = GriefPrevention.instance.getFoliaScheduler();
             final long ticksPerSecond = 20L;
             final long ticksPerDay = ticksPerSecond * 60 * 60 * 24;
-            scheduler.runTaskTimerAsynchronously(GriefPrevention.instance, new EntryWriter(), this.secondsBetweenWrites * ticksPerSecond, this.secondsBetweenWrites * ticksPerSecond);
-            scheduler.runTaskTimerAsynchronously(GriefPrevention.instance, new ExpiredLogRemover(), ticksPerDay, ticksPerDay);
+            scheduler.runAsyncRepeatingTask(this.secondsBetweenWrites * ticksPerSecond, this.secondsBetweenWrites * ticksPerSecond, new EntryWriter());
+            scheduler.runAsyncRepeatingTask(ticksPerDay, ticksPerDay, new ExpiredLogRemover());
         }
     }
 

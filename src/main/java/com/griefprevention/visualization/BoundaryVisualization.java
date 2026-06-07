@@ -97,13 +97,10 @@ public abstract class BoundaryVisualization
      */
     protected void scheduleRevert(@NotNull Player player, @NotNull PlayerData playerData)
     {
-        GriefPrevention.instance.getServer().getScheduler().scheduleSyncDelayedTask(
-                GriefPrevention.instance,
-                () -> {
-                    // Only revert if this is the active visualization.
-                    if (playerData.getVisibleBoundaries() == this) playerData.setVisibleBoundaries(null);
-                },
-                20L * 60);
+        GriefPrevention.instance.getFoliaScheduler().runTaskLater(player, 20L * 60, () -> {
+            // Only revert if this is the active visualization.
+            if (playerData.getVisibleBoundaries() == this) playerData.setVisibleBoundaries(null);
+        });
     }
 
     /**
@@ -277,10 +274,9 @@ public abstract class BoundaryVisualization
         // If they are online and in the same world as the visualization, display the visualization next tick.
         if (visualization.canVisualize(player))
         {
-            GriefPrevention.instance.getServer().getScheduler().scheduleSyncDelayedTask(
-                    GriefPrevention.instance,
-                    new DelayedVisualizationTask(visualization, playerData, event),
-                    1L);
+            GriefPrevention.instance.getFoliaScheduler().runTaskLater(
+                    player, 1L, new DelayedVisualizationTask(visualization, playerData, event)
+            );
         }
     }
 

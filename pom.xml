@@ -19,7 +19,7 @@
     </licenses>
 
     <properties>
-        <maven.compiler.release>21</maven.compiler.release>
+        <maven.compiler.release>25</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <!-- Default empty argument line to prevent Surefire config causing crashes if no other JVM args are set. -->
@@ -38,8 +38,8 @@
 
     <repositories>
         <repository>
-            <id>spigot-repo</id>
-            <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
+            <id>paper-repo</id>
+            <url>https://repo.papermc.io/repository/maven-public/</url>
         </repository>
     </repositories>
 
@@ -158,9 +158,9 @@
     <dependencies>
         <!-- Bukkit API. Bukkit has never ever deployed a release version -->
         <dependency>
-            <groupId>org.spigotmc</groupId>
-            <artifactId>spigot-api</artifactId>
-            <version>1.21-R0.1-SNAPSHOT</version>
+            <groupId>dev.folia</groupId>
+            <artifactId>folia-api</artifactId>
+            <version>[26.1.2.build,)</version>
             <scope>provided</scope>
         </dependency>
         <!-- Annotations for nullity and other behaviors -->

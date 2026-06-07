@@ -3,7 +3,8 @@ main: me.ryanhamshire.GriefPrevention.GriefPrevention
 softdepend: [Multiverse-Core, My_Worlds, MystCraft, Transporter, RoyalCommands, MultiWorld, Denizen, CommandHelper]
 dev-url: https://dev.bukkit.org/projects/grief-prevention
 version: '${git.commit.id.describe}'
-api-version: '1.20'
+api-version: '26.1.2'
+folia-supported: true
 commands:
     abandonclaim:
       description: Deletes a claim.

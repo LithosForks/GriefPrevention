@@ -83,6 +83,6 @@ class CleanupUnusedClaimPreTask implements Runnable
         }
 
         //pass it back to the main server thread, where it's safe to delete a claim if needed
-        Bukkit.getScheduler().scheduleSyncDelayedTask(GriefPrevention.instance, new CleanupUnusedClaimTask(claimToExpire, ownerData, ownerInfo), 1L);
+        GriefPrevention.instance.getFoliaScheduler().runGlobalTask(new CleanupUnusedClaimTask(claimToExpire, ownerData, ownerInfo));
     }
 }
