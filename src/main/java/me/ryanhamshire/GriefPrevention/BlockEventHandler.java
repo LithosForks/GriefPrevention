@@ -469,7 +469,7 @@ public class BlockEventHandler implements Listener
                 block.getY() > GriefPrevention.instance.getSeaLevel(block.getWorld()) - 5 &&
                 claim == null)
         {
-            GriefPrevention.sendMessage(player, TextMode.Warn, Messages.NoTNTDamageAboveSeaLevel);
+            GriefPrevention.sendMessage(player, TextMode.Warn, Messages.NoTNTDamageAboveSeaLevel, true);
         }
 
         //warn players about disabled pistons outside of land claims
