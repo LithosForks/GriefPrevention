@@ -19,6 +19,8 @@
 package me.ryanhamshire.GriefPrevention;
 
 import com.griefprevention.protection.ProtectionHelper;
+import io.papermc.paper.event.entity.EntityBreakByEntityEvent;
+import io.papermc.paper.event.entity.EntityBreakEvent;
 import me.ryanhamshire.GriefPrevention.events.ProtectDeathDropsEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.ExplosionResult;
@@ -28,6 +30,7 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.World.Environment;
 import org.bukkit.block.Block;
+import org.bukkit.entity.Cushion;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.FallingBlock;
@@ -53,6 +56,7 @@ import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.EntityInteractEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
+import org.bukkit.event.entity.EntityPlaceEvent;
 import org.bukkit.event.entity.ExpBottleEvent;
 import org.bukkit.event.entity.ItemMergeEvent;
 import org.bukkit.event.entity.ItemSpawnEvent;
@@ -705,6 +709,80 @@ public class EntityEventHandler implements Listener
             }
         }
     }
+
+    // survival.rocks start
+    // cushions
+
+    // survival.rocks -- COPIED EXACTLY FROM HangingPlaceEvent
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
+    void onEntityPlaceEvent(EntityPlaceEvent event) {
+        //don't track in worlds where claims are not enabled
+        if (!GriefPrevention.instance.claimsEnabledForWorld(event.getBlock().getWorld())) return;
+        if (event.getPlayer() == null) return;
+
+        // survival.rocks -- added line
+        if (!(event.getEntity() instanceof Cushion)) return;
+
+        //FEATURE: similar to above, placing a painting requires build permission in the claim
+
+        //if the player doesn't have permission, don't allow the placement
+        Supplier<String> noBuildReason = ProtectionHelper.checkPermission(event.getPlayer(), event.getEntity().getLocation(), ClaimPermission.Build, event);
+        if (noBuildReason != null)
+        {
+            event.setCancelled(true);
+            GriefPrevention.sendMessage(event.getPlayer(), TextMode.Err, noBuildReason.get(), true);
+            return;
+        }
+    }
+
+    // survival.rocks -- COPIED EXACTLY FROM HangingBreakEvent
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
+    void onEntityBreakEvent(EntityBreakEvent event) {
+        //don't track in worlds where claims are not enabled
+        if (!GriefPrevention.instance.claimsEnabledForWorld(event.getEntity().getWorld())) return;
+
+        //Ignore cases where itemframes should break due to no supporting blocks
+        if (event.getCause() == EntityBreakEvent.RemoveCause.PHYSICS) return;
+
+        // survival.rocks -- added line
+        if (!(event.getEntity() instanceof Cushion)) return;
+
+        //FEATURE: claimed paintings are protected from breakage
+
+        //explosions don't destroy hangings
+        if (event.getCause() == EntityBreakEvent.RemoveCause.EXPLOSION)
+        {
+            event.setCancelled(true);
+            return;
+        }
+
+        //only allow players to break paintings, not anything else (like water and explosions)
+        if (!(event instanceof EntityBreakByEntityEvent entityEvent))
+        {
+            event.setCancelled(true);
+            return;
+        }
+
+        //who is removing it?
+        Entity remover = entityEvent.getRemover();
+
+        //again, making sure the breaker is a player
+        if (!(remover instanceof Player playerRemover))
+        {
+            event.setCancelled(true);
+            return;
+        }
+
+        //if the player doesn't have build permission, don't allow the breakage
+        Supplier<String> noBuildReason = ProtectionHelper.checkPermission(playerRemover, event.getEntity().getLocation(), ClaimPermission.Build, event);
+        if (noBuildReason != null)
+        {
+            event.setCancelled(true);
+            GriefPrevention.sendMessage(playerRemover, TextMode.Err, noBuildReason.get(), true);
+        }
+    }
+
+    // survival.rocks end
 
     //when a painting is broken
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
