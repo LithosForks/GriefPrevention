@@ -41,6 +41,7 @@ import org.bukkit.block.data.BlockData;
 import org.bukkit.block.data.Waterlogged;
 import org.bukkit.entity.AbstractHorse;
 import org.bukkit.entity.Animals;
+import org.bukkit.entity.CopperGolem;
 import org.bukkit.entity.Creature;
 import org.bukkit.entity.Donkey;
 import org.bukkit.entity.Entity;
@@ -1149,7 +1150,7 @@ class PlayerEventHandler implements Listener
         }
 
         //if the entity is an animal, apply container rules
-        if ((instance.config_claims_preventTheft && (entity instanceof Animals || entity instanceof Fish)) || (entity.getType() == EntityType.VILLAGER && instance.config_claims_villagerTradingRequiresTrust))
+        if ((instance.config_claims_preventTheft && (entity instanceof Animals || entity instanceof Fish || entity instanceof CopperGolem)) || (entity.getType() == EntityType.VILLAGER && instance.config_claims_villagerTradingRequiresTrust))
         {
             //if the entity is in a claim
             Claim claim = this.dataStore.getClaimAt(entity.getLocation(), false, null);
@@ -1648,7 +1649,8 @@ class PlayerEventHandler implements Listener
                                 clickedBlockType == Material.COMPARATOR ||
                                 clickedBlockType == Material.REDSTONE_WIRE ||
                                 Tag.FLOWER_POTS.isTagged(clickedBlockType) ||
-                                Tag.CANDLES.isTagged(clickedBlockType)
+                                Tag.CANDLES.isTagged(clickedBlockType) ||
+                                Tag.COPPER_GOLEM_STATUES.isTagged(clickedBlockType)
                 ))
         {
             if (playerData == null) playerData = this.dataStore.getPlayerData(player.getUniqueId());
