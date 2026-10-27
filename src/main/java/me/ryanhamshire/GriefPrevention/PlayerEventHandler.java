@@ -51,6 +51,7 @@ import org.bukkit.entity.Hanging;
 import org.bukkit.entity.Llama;
 import org.bukkit.entity.Mule;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Projectile;
 import org.bukkit.entity.SulfurCube;
 import org.bukkit.entity.Tameable;
 import org.bukkit.entity.Vehicle;
@@ -60,6 +61,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
+import org.bukkit.event.entity.EntityInteractEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerBucketEmptyEvent;
@@ -1459,6 +1461,37 @@ class PlayerEventHandler implements Listener
         GriefPrevention.sendMessage(player, TextMode.Err, denial.get(), true);
         event.setCancelled(true);
     }
+
+    // survival.rocks start
+
+    @EventHandler // prevent projectiles from pressing buttons if no trust
+    void onEntityInteractEvent(EntityInteractEvent event) {
+        if (!(event.getEntity() instanceof Projectile projectile)) {
+            return;
+        }
+
+        if (!(projectile.getShooter() instanceof Player player)) {
+            return;
+        }
+
+        Block clickedBlock = event.getBlock();
+        Material clickedBlockType = clickedBlock.getType();
+
+        if (instance.config_claims_preventButtonsSwitches && Tag.BUTTONS.isTagged(clickedBlockType)) {
+            PlayerData playerData = this.dataStore.getPlayerData(player.getUniqueId());
+            Claim claim = this.dataStore.getClaimAt(clickedBlock.getLocation(), false, playerData.lastClaim);
+            if (claim != null) {
+                playerData.lastClaim = claim;
+                Supplier<String> noAccessReason = claim.checkPermission(player, ClaimPermission.Access, event);
+                if (noAccessReason != null) {
+                    event.setCancelled(true);
+                    GriefPrevention.sendMessage(player, TextMode.Err, noAccessReason.get(), true);
+                }
+            }
+        }
+    }
+
+    // survival.rocks end
 
     //when a player interacts with the world
     @EventHandler(priority = EventPriority.LOW)
