@@ -697,6 +697,9 @@ public class EntityEventHandler implements Listener
     public void onEntityPickup(EntityChangeBlockEvent event)
     {
         //FEATURE: endermen don't steal claimed blocks
+        if (GriefPrevention.instance.config_endermenMoveBlocks) {
+            return;
+        }
 
         //if its an enderman
         if (event.getEntity().getType() == EntityType.ENDERMAN)
